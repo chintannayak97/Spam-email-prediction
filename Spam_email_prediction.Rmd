@@ -1,0 +1,156 @@
+---
+title: "Spam email prediction using logistic regression"
+author: "Chintan Nayak"
+date: "11/03/2022"
+output: html_document
+---
+
+```{r}
+library(tidymodels)
+library(tidyverse)
+library(ggpubr)
+library(ggplot2)
+library(dplyr)
+library(skimr)
+library(openintro)
+```
+
+```{r}
+glimpse(email)
+```
+```{r}
+
+email_split = initial_split(email,prop.=.75)
+email_training = training(email_split)
+email_testing = testing(email_split)
+
+```
+
+
+```{r}
+
+email_model = logistic_reg()%>%
+  set_engine('glm') %>%
+  set_mode('classification')
+
+```
+
+```{r}
+
+email_fit = email_model%>%
+  fit(spam ~ num_char + re_subj + inherit, data= email_training)
+  
+```
+
+
+```{r}
+
+class_preds = predict(email_fit, new_data = email_testing, type= 'class')
+
+```
+
+
+```{r}
+
+prob_preds= predict(email_fit, new_data = email_testing, type= 'prob')
+
+```
+
+
+```{r}
+
+email_results= email_testing %>%
+  select(spam) %>%
+  bind_cols(class_preds, prob_preds)
+
+email_results
+
+```
+
+```{r}
+
+conf_mat(email_results, truth = spam, estimate= .pred_class)
+
+```
+
+
+```{r}
+
+email_metrics = metric_set(accuracy, sens, specificity)
+
+email_metrics(email_results, truth = spam, estimate= .pred_class)
+
+```
+
+```{r}
+
+conf_mat(email_results, truth = spam, estimate= .pred_class) %>%
+autoplot(type = 'heatmap')
+
+```
+
+
+```{r}
+
+conf_mat(email_results, truth = spam, estimate= .pred_class) %>%
+autoplot(type = 'mosaic')
+
+```
+
+
+```{r}
+
+email_results%>%
+  roc_curve(truth= spam, estimate= .pred_1)%>%
+  autoplot()
+
+```
+
+
+```{r}
+email_results%>%
+  roc_auc(truth= spam, estimate= .pred_0)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
